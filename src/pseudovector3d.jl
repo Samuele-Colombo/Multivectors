@@ -1,21 +1,21 @@
-@enum VectorBasis3D begin 
-    x̂ = Int32(1) 
-    ŷ
-    ẑ
+@enum PseudoVectorBasis3D begin 
+    x̂ŷ = Int32(4)
+    ŷẑ
+    x̂ẑ
 end
 
-struct Vector3D{T} <: FieldVector{3, T}
-    x̂::T
-    ŷ::T
-    ẑ::T
+struct PseudoVector3D{T} <: FieldVector{3, T}
+    x̂ŷ::T
+    x̂ẑ::T
+    ŷẑ::T
 end
 
-Base.:*(s::Number, b::VectorBasis3D) =  s * [i ≠ Int(b) ? 0 : 1 for i ∈ 1:3] |> Vector3D
+Base.:*(s::Number, b::PseudoVectorBasis3D) =  s * [i ≠ Int(b) ? 0 : 1 for i ∈ 4:6] |> PseudoVector3D
 
-show(io::IO, ::MIME"text/plain", a::Vector3D) = show(io, a)
-function show(io::IO, a::Vector3D)
+show(io::IO, ::MIME"text/plain", a::PseudoVector3D) = show(io, a)
+function show(io::IO, a::PseudoVector3D)
     compact = get(io, :compact, false)
-    vec = [zip(a, instances(VectorBasis3D))...][map(!iszero, a)]
+    vec = [zip(a, instances(PseudoVectorBasis3D))...][map(!iszero, a)]
     isempty(vec) && return
     coord, uv = vec[begin]
     show(io, coord); show(io, uv)
