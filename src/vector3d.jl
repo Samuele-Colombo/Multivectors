@@ -1,5 +1,5 @@
 @enum VectorBasis3D begin 
-    x̂ = Int32(1) 
+    x̂ = Int32(2) 
     ŷ
     ẑ
 end
@@ -10,7 +10,21 @@ struct Vector3D{T} <: FieldVector{3, T}
     ẑ::T
 end
 
-Base.:*(s::Number, b::VectorBasis3D) =  s * [i ≠ Int(b) ? 0 : 1 for i ∈ 1:3] |> Vector3D
+Base.:*(s::Real, b::VectorBasis3D) =  s * [i ≠ b ? 0 : 1 for i ∈ instances(VectorBasis3D)] |> Vector3D
+
+function getindex(v::Vector3D{T}, i::Int64) where {T}
+    i ∈ Int32.(_uvecs)                   || throw(BoundsError(v, i))
+    i ∈ Int32.(instances(VectorBasis3D)) || return zero(T)
+    getfield(v, i |> VectorBasis3D |> Symbol)
+end
+
+getindex(v::Vector3D, i::UVecs3D) = getindex(v, Int64(i))
+
+function iterate(v::Vector3D, base::Int64 = 1)
+    base <= length(v) ? (getindex(v, base), base + 1) : nothing
+end
+
+length(::Vector3D) = length(_uvecs)
 
 show(io::IO, ::MIME"text/plain", a::Vector3D) = show(io, a)
 function show(io::IO, a::Vector3D)

@@ -1,5 +1,5 @@
 @enum PseudoVectorBasis3D begin 
-    x̂ŷ = Int32(4)
+    x̂ŷ = Int32(5)
     ŷẑ
     x̂ẑ
 end
@@ -10,7 +10,21 @@ struct PseudoVector3D{T} <: FieldVector{3, T}
     ŷẑ::T
 end
 
-Base.:*(s::Number, b::PseudoVectorBasis3D) =  s * [i ≠ Int(b) ? 0 : 1 for i ∈ 4:6] |> PseudoVector3D
+Base.:*(s::Real, b::PseudoVectorBasis3D) =  s * [i ≠ b ? 0 : 1 for i ∈ instances(PseudoVectorBasis3D)] |> PseudoVector3D
+
+function getindex(v::PseudoVector3D{T}, i::Int64) where {T}
+    i ∈ Int32.(_uvecs)                         || throw(BoundsError(v, i))
+    i ∈ Int32.(instances(PseudoVectorBasis3D)) || return zero{T}
+    getfield(v, i |> PseudoVectorBasis3D |> Symbol)
+end
+
+getindex(v::PseudoVector3D, i::UVecs3D) = getindex(v, Int64(i))
+
+function iterate(v::PseudoVector3D, base::Int64 = 1)
+    base <= length(v) ? (getindex(v, base), base + 1) : nothing
+end
+
+length(::PseudoVector3D) = length(_uvecs)
 
 show(io::IO, ::MIME"text/plain", a::PseudoVector3D) = show(io, a)
 function show(io::IO, a::PseudoVector3D)
