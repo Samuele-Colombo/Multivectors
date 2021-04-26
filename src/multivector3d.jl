@@ -1,26 +1,14 @@
-@enum Scalar begin
-    ŝ = Int32(1)
+struct Vector3D{T} <: FieldVector{3, T}
+    x̂::T
+    ŷ::T
+    ẑ::T
 end
 
-Base.:*(s::Real, ::Scalar) = s 
-
-show(io::IO, ::MIME"text/plain", a::Scalar) = show(io, a)
-show(io::IO, ::Scalar) = show(io, "")
-
-@enum PseudoScalar3D begin
-    x̂ŷẑ = Int32(8)
+struct PseudoVector3D{T} <: FieldVector{3, T}
+    x̂ŷ::T
+    x̂ẑ::T
+    ŷẑ::T
 end
-
-const ı̂ = x̂ŷẑ 
-
-Base.:*(s::Real, ::PseudoScalar3D) = Complex(0, s) 
-
-const UVecs3D = Union{Scalar, VectorBasis3D, PseudoVectorBasis3D, PseudoScalar3D}
-
-const _uvecs = vcat(instances(Scalar)..., 
-                    instances(VectorBasis3D)..., 
-                    instances(PseudoVectorBasis3D)..., 
-                    instances(PseudoScalar3D)...)
 
 struct MultiVector3D{T} <: FieldVector{8, T}
     ŝ::T
@@ -33,30 +21,43 @@ struct MultiVector3D{T} <: FieldVector{8, T}
     x̂ŷẑ::T
 end
 
-show(io::IO, ::MIME"text/plain", a::MultiVector3D) = show(io, a)
-function show(io::IO, a::MultiVector3D)
-    compact = get(io, :compact, false)
-    vec = [zip(a, _uvecs)...][map(!iszero, a)]
-    isempty(vec) && return
-    coord, uv = vec[begin]
-    show(io, coord); show(io, uv)
-    
-    for (coord, uv) ∈ vec[begin+1:end]
-        iszero(coord) && continue
-        if signbit(coord) && !isnan(coord)
-            print(io, compact ? "-" : " - ")
-            if isa(coord,Signed) && !isa(coord,BigInt) && coord == typemin(typeof(coord))
-                show(io, -widen(coord))
-            else
-                show(io, -coord)
-            end
-        else
-            print(io, compact ? "+" : " + ")
-            show(io, coord)
+Base.:*(s::T, ::Scalar) where {T <: Real}         = MultiVector3D(s, zeros(T, 7)...) 
+Base.:*(s::Real, b::VectorBasis3D)                =       Vector3D((i ≠ b ? 0 : s for i ∈ instances(VectorBasis3D))...)
+Base.:*(s::Real, b::PseudoVectorBasis3D)          = PseudoVector3D((i ≠ b ? 0 : s for i ∈ instances(PseudoVectorBasis3D))...)
+Base.:*(s::T, ::PseudoScalar3D) where {T <: Real} = MultiVector3D(zeros(T, 7)..., s)
+
+for (Type, basis) ∈ [:Vector3D => instances(VectorBasis3D), :PseudoVector3D => instances(PseudoVectorBasis3D), :MultiVector3D => _uvecs]
+    quote
+        show(io::IO, ::MIME"text/plain", a::$Type) = show(io, a)
+        function show(io::IO, a::$Type)
+            compact = get(io, :compact, false)
+            vec = [zip(a, $basis)...][map(!iszero, a)]
+            isempty(vec) && return
+            coord, uv = vec[begin]
+            show(io, coord); show(io, uv)
+            
+            for (coord, uv) ∈ vec[begin+1:end]
+                iszero(coord) && continue
+                if signbit(coord) && !isnan(coord)
+                    print(io, compact ? "-" : " - ")
+                    if isa(coord,Signed) && !isa(coord,BigInt) && coord == typemin(typeof(coord))
+                        show(io, -widen(coord))
+                    else
+                        show(io, -coord)
+                    end
+                else
+                    print(io, compact ? "+" : " + ")
+                    show(io, coord)
+                end
+                if !(isa(coord,Integer) && !isa(coord,Bool) || isa(coord,AbstractFloat) && isfinite(coord))
+                    print(io, "*")
+                end
+                print(io, uv)
+            end    
         end
-        if !(isa(coord,Integer) && !isa(coord,Bool) || isa(coord,AbstractFloat) && isfinite(coord))
-            print(io, "*")
-        end
-        print(io, uv)
-    end    
+    end |> eval
 end
+
+
+
+
