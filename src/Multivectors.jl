@@ -10,7 +10,8 @@ export Vector3D, norm²,
     Scalar, ŝ,
     VectorBasis3D, x̂, ŷ, ẑ,
     PseudoVectorBasis3D, x̂ŷ, x̂ẑ, ŷẑ,
-    PseudoScalar3D, x̂ŷẑ, ı̂
+    PseudoScalar3D, x̂ŷẑ, ı̂,
+    MultiVector3D
 
 include("bases.jl")
 include("multivector3d.jl")
