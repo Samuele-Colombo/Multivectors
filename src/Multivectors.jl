@@ -1,7 +1,7 @@
 module Multivectors
 
 import Base:
-    (*), (+),
+    (*), (+), (-),
     show, iterate, getindex, length
 import StaticArrays:
     FieldVector
