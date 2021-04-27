@@ -1,13 +1,18 @@
 module Multivectors
 
 import Base:
-    (*), show
+    (*), (+), (-),
+    show, iterate, getindex, length
 import StaticArrays:
     FieldVector
 
-export VectorBasis3D, Vector3D, norm²,
-    x̂, ŷ, ẑ
+export Vector3D, norm²,
+    Scalar, ŝ,
+    VectorBasis3D, x̂, ŷ, ẑ,
+    PseudoVectorBasis3D, x̂ŷ, x̂ẑ, ŷẑ,
+    PseudoScalar3D, x̂ŷẑ, ı̂
 
-include("vector3d.jl")
+include("bases.jl")
+include("multivector3d.jl")
 
 end # module
