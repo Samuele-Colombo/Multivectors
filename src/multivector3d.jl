@@ -4,11 +4,15 @@ struct Vector3D{T} <: FieldVector{3, T}
     ẑ::T
 end
 
+Vector3D(x, y, z) = Vector3D(promote(x, y, z)...)
+
 struct PseudoVector3D{T} <: FieldVector{3, T}
     x̂ŷ::T
     x̂ẑ::T
     ŷẑ::T
 end
+
+PseudoVector3D(xy, xz, yz) = PseudoVector3D(promote(xy, xz, yz)...)
 
 struct MultiVector3D{T} <: FieldVector{8, T}
     ŝ::T
@@ -21,9 +25,11 @@ struct MultiVector3D{T} <: FieldVector{8, T}
     x̂ŷẑ::T
 end
 
+MultiVector3D(s, x, y, z, xy, xz, yz, xyz) = MultiVector3D(promote(s, x, y, z, xy, xz, yz, xyz)...)
+
 Base.:*(s::T, ::Scalar) where {T <: Real}         = MultiVector3D(s, zeros(T, 7)...) 
-Base.:*(s::Real, b::VectorBasis3D)                =       Vector3D((i ≠ b ? 0 : s for i ∈ instances(VectorBasis3D))...)
-Base.:*(s::Real, b::PseudoVectorBasis3D)          = PseudoVector3D((i ≠ b ? 0 : s for i ∈ instances(PseudoVectorBasis3D))...)
+Base.:*(s::Real, b::VectorBasis3D)                =       Vector3D((i ≠ b ? false : s for i ∈ instances(VectorBasis3D))...)
+Base.:*(s::Real, b::PseudoVectorBasis3D)          = PseudoVector3D((i ≠ b ? false : s for i ∈ instances(PseudoVectorBasis3D))...)
 Base.:*(s::T, ::PseudoScalar3D) where {T <: Real} = MultiVector3D(zeros(T, 7)..., s)
 
 for (Type, basis) ∈ [:Vector3D => instances(VectorBasis3D), :PseudoVector3D => instances(PseudoVectorBasis3D), :MultiVector3D => _uvecs]
@@ -59,19 +65,19 @@ for (Type, basis) ∈ [:Vector3D => instances(VectorBasis3D), :PseudoVector3D =>
 end
 
 @inline function _apply(f::Function, mv::MultiVector3D, v::Union{Vector3D, PseudoVector3D}, range::AbstractVector)
-    arr = mv |> Vector
+    arr = mv |> SVector{8}
     arr[range] = f(@view(arr[range]), v)
     arr |> MultiVector3D
 end
 
 @inline function _apply(f::Function, mv::MultiVector3D, z::Complex, range::AbstractVector)
-    arr = mv |> Vector
-    arr[range] = f(@view(arr[range]), reim(z) |> Vector)
+    arr = mv |> SVector{8}
+    arr[range] = f(@view(arr[range]), reim(z) |> SVector{2})
     arr |> MultiVector3D
 end
 
 @inline function _apply(f::Function, mv::MultiVector3D, r::Real, i::Int)
-    arr = mv |> Vector
+    arr = mv |> SVector{8}
     arr[i] = f(arr[i], r)
     arr |> MultiVector3D
 end

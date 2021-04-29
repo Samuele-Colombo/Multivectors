@@ -4,7 +4,7 @@ import Base:
     (*), (+), (-),
     show, iterate, getindex, length
 import StaticArrays:
-    FieldVector
+    FieldVector, SVector
 
 export Vector3D, norm²,
     Scalar, ŝ,
